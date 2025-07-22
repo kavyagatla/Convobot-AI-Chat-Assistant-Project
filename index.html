@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvoBot</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            background: f4eff0f8(44, 47, 59);
+            font-family: Arial, sans-serif;
+        }
+        .chat {
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+        .card {
+            height: 500px;
+            border-radius: 15px;
+            background-color: #0c0305f8(0, 0, 0, 0.4);
+            box-shadow: 0 4px 10px #0c0305f8(0, 0, 0, 0.3);
+        }
+        .msg_card_body {
+            overflow-y: auto;
+            padding: 15px;
+        }
+        .type_msg {
+            background-color: #0c0305f8;
+            color: rgb(195, 21, 189);
+            height: 60px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .send_btn {
+            background-color: #5c58cc;
+            color: white;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            margin-left: 5px;
+            transition: background 0.2s;
+        }
+        .send_btn:hover {
+            background-color: #5c58cc;
+        }
+        .msg_cotainer_send, .msg_cotainer {
+            max-width: 75%;
+            word-wrap: break-word;
+            border-radius: 20px;
+            padding: 12px 15px;
+            margin: 8px 0;
+            font-size: 16px;
+            line-height: 1.4;
+            color: white;
+        }
+        .msg_cotainer_send {
+            background-color: #5c58cc;
+            
+            text-align: right;
+            margin-left: auto;
+        }
+        .msg_cotainer {
+            background-color: rgba(0, 0, 0, 0.808);
+            text-align: left;
+            font-size: 18px;
+        }
+        .msg_time, .msg_time_send {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .msg_card_body::-webkit-scrollbar {
+            width: 6px;
+        }
+        .msg_card_body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .msg_card_body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid h-100">
+        <div class="row justify-content-center h-100">
+            <div class="col-md-8 col-xl-6 chat">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 style="color: black;">ConvoBot</h5>
+                    </div>
+                    <div id="messageContainer" class="card-body msg_card_body"></div>
+                    <div class="card-footer">
+                        <form id="messageForm" class="input-group">
+                            <input type="text" id="textInput" placeholder="Enter prompt..." autocomplete="off" class="form-control type_msg" required />
+                            <div class="input-group-append">
+                                <button type="submit" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("messageForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            const messageContainer = document.getElementById("messageContainer");
+            const textInput = document.getElementById("textInput");
+            const prompt = textInput.value.trim();
+            if (!prompt) return;
+
+            const userHtml = `
+                <div class="msg_cotainer_send">
+                    ${prompt}
+                    <div class="msg_time_send">${new Date().toLocaleTimeString()}</div>
+                </div>
+            `;
+            messageContainer.innerHTML += userHtml;
+            textInput.value = "";
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
+                const data = await response.json();
+                const botHtml = `
+                    <div class="msg_cotainer">
+                        ${data.response}
+                        <div class="msg_time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                messageContainer.innerHTML += botHtml;
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error:', error);
+                const errorHtml = `
+                    <div class="msg_cotainer">
+                        An error occurred while fetching the response.
+                        <div class="msg_time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                messageContainer.innerHTML += errorHtml;
+            }
+        });
+    </script>
+</body>
+</html>
